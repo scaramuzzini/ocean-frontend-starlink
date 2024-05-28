@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 function StartlinkList() {
     const [starlinks, setStarlinks] = useState([]);
@@ -23,13 +25,22 @@ function StartlinkList() {
     return (
         <div>
             <h1>Satélites da Startlink</h1>
-            <ul>
-                {starlinks.map((sat) => (
-                    <li key={sat.id}>{sat.spaceTrack.OBJECT_NAME}</li>
+            <MapContainer center={[0,0]} zoom={2} style={{height: '80vh', width:'100%' }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {starlinks
+                    .filter((sat) => sat.latitude !== null && sat.longitude !==null)
+                    .map((sat) => (
+                        <Marker position={[sat.latitude, sat.longitude]}>
+                            <Popup>
+                                {sat.spaceTrack.OBJECT_NAME}
+                            </Popup>
+                        </Marker>
                 ))}
-            </ul>
+            </MapContainer>
+            
         </div>
-
     );
 }
 
