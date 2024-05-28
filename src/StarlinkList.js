@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+const satIcon = new L.Icon({
+    iconUrl: 'satellite.png',
+    iconSize: [25,25],
+    iconAnchor: [12,12],
+    popupAnchor: [0, -12]
+})
 
 function StartlinkList() {
     const [starlinks, setStarlinks] = useState([]);
@@ -32,7 +40,7 @@ function StartlinkList() {
                 {starlinks
                     .filter((sat) => sat.latitude !== null && sat.longitude !==null)
                     .map((sat) => (
-                        <Marker position={[sat.latitude, sat.longitude]}>
+                        <Marker key={sat.id} position={[sat.latitude, sat.longitude]} icon={satIcon}>
                             <Popup>
                                 {sat.spaceTrack.OBJECT_NAME}
                             </Popup>
