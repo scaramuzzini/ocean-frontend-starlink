@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,9 +15,15 @@ function StartlinkList() {
     const [starlinks, setStarlinks] = useState([]);
     const [page,setPage] = useState(1);
     const [hasNextPage, setHasNextPage] = useState(true);
+    const [total, setTotal] = useState(0);
+    const inicializacao = useRef(true);
 
     useEffect(() => {
-        fetchStarlinks(1);
+        if (inicializacao.current) {
+            console.log('passei aqui');
+            fetchStarlinks(1);
+            inicializacao.current = false;
+        }
     },[]);
 
     const fetchStarlinks = async (page) => {
@@ -30,6 +36,7 @@ function StartlinkList() {
             //setStarlinks(response.data.docs);
             setStarlinks((docsAtuais) => [...docsAtuais, ...response.data.docs]);
             setHasNextPage(response.data.hasNextPage);
+            setTotal(response.data.totalDocs);
         } catch (error) {
             console.error('Erro ao obter dados da api da starlink:', error);
         }
@@ -46,7 +53,7 @@ function StartlinkList() {
     return (
         <div>
             <h1>Satélites da Starlink</h1>
-            <MapContainer center={[0,0]} zoom={2} style={{height: '80vh', width:'100%' }}>
+            <MapContainer center={[0,0]} zoom={2} style={{height: '60vh', width:'100%' }}>
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
@@ -68,14 +75,14 @@ function StartlinkList() {
                         </Marker>
                 ))}
             </MapContainer>
-            { hasNextPage && (
                 <div style={{textAlign: 'center', margin:'20px 0'}}>
-                    <button onClick={loadMore}>
-                        Carregar mais
-                    </button>
+                    { hasNextPage && (
+                        <button onClick={loadMore}>
+                            Carregar mais
+                        </button>
+                    )}
+                    <p>{starlinks.length} satélites carregados de um Total de {total}</p>
                 </div>
-            )}
-            
         </div>
     );
 }
