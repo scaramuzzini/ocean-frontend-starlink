@@ -13,26 +13,39 @@ const satIcon = new L.Icon({
 
 function StartlinkList() {
     const [starlinks, setStarlinks] = useState([]);
+    const [page,setPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(true);
 
     useEffect(() => {
-        const fetchStarlinks = async () => {
-            try {
-                const response = await axios.post('https://api.spacexdata.com/v4/starlink/query', {
-                    "query": {},
-                    "options": { limit: 100 }
-                });
-                console.log(response.data);
-                setStarlinks(response.data.docs);
-            } catch (error) {
-                console.error('Erro ao obter dados da api da starlink:', error);
-            }
-        }
-        fetchStarlinks();
+        fetchStarlinks(1);
     },[]);
+
+    const fetchStarlinks = async (page) => {
+        try {
+            const response = await axios.post('https://api.spacexdata.com/v4/starlink/query', {
+                "query": {},
+                "options": { page: page, limit: 100 }
+            });
+            console.log(response.data);
+            //setStarlinks(response.data.docs);
+            setStarlinks((docsAtuais) => [...docsAtuais, ...response.data.docs]);
+            setHasNextPage(response.data.hasNextPage);
+        } catch (error) {
+            console.error('Erro ao obter dados da api da starlink:', error);
+        }
+    }
+
+    const loadMore = () => {
+        if (hasNextPage) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchStarlinks(nextPage);
+        }
+    };
 
     return (
         <div>
-            <h1>Satélites da Startlink</h1>
+            <h1>Satélites da Starlink</h1>
             <MapContainer center={[0,0]} zoom={2} style={{height: '80vh', width:'100%' }}>
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -42,11 +55,26 @@ function StartlinkList() {
                     .map((sat) => (
                         <Marker key={sat.id} position={[sat.latitude, sat.longitude]} icon={satIcon}>
                             <Popup>
-                                {sat.spaceTrack.OBJECT_NAME}
+                                <div>
+                                    <h1>{sat.spaceTrack.OBJECT_NAME}</h1>
+                                    <p>Latitude: {sat.latitude}</p>
+                                    <p>Longitude: {sat.longitude}</p>
+                                    <p>Velocidade:{sat.velocity_kms}</p>
+                                    <p>Altura:{sat.height_km}</p>
+                                    <p>Data de lançamento:{sat.spaceTrack.LAUNCH_DATE}</p>
+                                </div>
+                                
                             </Popup>
                         </Marker>
                 ))}
             </MapContainer>
+            { hasNextPage && (
+                <div style={{textAlign: 'center', margin:'20px 0'}}>
+                    <button onClick={loadMore}>
+                        Carregar mais
+                    </button>
+                </div>
+            )}
             
         </div>
     );
